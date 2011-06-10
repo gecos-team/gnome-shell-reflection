@@ -1,0 +1,23 @@
+
+Abstract
+--------
+
+GnomeShell Reflection is an extension that gives you a classic style desktop.
+It is mainly designed for the new Guadalinex distro (codename GECOS),
+but feel free to use it anyway.
+
+See http://www.guadalinex.org/
+
+Installation
+------------
+
+ * Copy the extension directory under ~/.local/share/gnome-shell/extensions/
+ * Restart the shell: ALT + F2, type "r" and press ENTER.
+ * You are ready to go.
+
+License
+-------
+
+This project is licensed under the terms of the GPL v2.0,
+see http://www.gnu.org/licenses/gpl-2.0.html
+
