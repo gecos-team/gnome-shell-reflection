@@ -1,0 +1,9 @@
+
+/* Message Tray */
+#message-tray {
+    background-gradient-direction: vertical;
+    background-gradient-start: rgba(0,0,0,0.82);
+    background-gradient-end: rgba(0,0,0,0.01);
+    height: 36px;
+    color: white;
+}
