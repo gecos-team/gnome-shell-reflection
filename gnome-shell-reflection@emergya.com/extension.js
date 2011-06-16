@@ -40,6 +40,7 @@ const BoxPointer = imports.ui.boxpointer;
 const MessageTray = imports.ui.messageTray;
 const LookingGlass = imports.ui.lookingGlass;
 const PopupMenu = imports.ui.popupMenu;
+const AltTab = imports.ui.altTab;
 
 const Side = {
     HIDDEN: 0,
@@ -295,6 +296,60 @@ function updateMessageTray() {
 }
 
 /**
+ * Fix the switch backward feature (ALT+SHIFT+TAB)
+ */
+function fixAltTab() {
+
+    AltTab.AltTabPopup.prototype._keyPressEvent = function(actor, event) {
+        let keysym = event.get_key_symbol();
+        let event_state = AltTab.Shell.get_event_state(event);
+        let backwards = event_state & AltTab.Clutter.ModifierType.SHIFT_MASK;
+        let action = global.screen.get_display().get_keybinding_action(event.get_key_code(), event_state);
+
+        this._disableHover();
+
+        if (action == AltTab.Meta.KeyBindingAction.SWITCH_GROUP
+            || action == AltTab.Meta.KeyBindingAction.SWITCH_GROUP_BACKWARD)
+            this._select(this._currentApp, backwards ? this._previousWindow() : this._nextWindow());
+        else if (keysym == AltTab.Clutter.Escape)
+            this.destroy();
+        else if (this._thumbnailsFocused) {
+            if (action == AltTab.Meta.KeyBindingAction.SWITCH_WINDOWS
+                || action == AltTab.Meta.KeyBindingAction.SWITCH_WINDOWS_BACKWARD)
+                if (backwards) {
+                    if (this._currentWindow == 0 || this._currentWindow == -1)
+                        this._select(this._previousApp());
+                    else
+                        this._select(this._currentApp, this._previousWindow());
+                } else {
+                    if (this._currentWindow == this._appIcons[this._currentApp].cachedWindows.length - 1)
+                        this._select(this._nextApp());
+                    else
+                        this._select(this._currentApp, this._nextWindow());
+                }
+            else if (keysym == AltTab.Clutter.Left)
+                this._select(this._currentApp, this._previousWindow());
+            else if (keysym == AltTab.Clutter.Right)
+                this._select(this._currentApp, this._nextWindow());
+            else if (keysym == AltTab.Clutter.Up)
+                this._select(this._currentApp, null, true);
+        } else {
+            if (action == AltTab.Meta.KeyBindingAction.SWITCH_WINDOWS
+                || action == AltTab.Meta.KeyBindingAction.SWITCH_WINDOWS_BACKWARD)
+                this._select(backwards ? this._previousApp() : this._nextApp());
+            else if (keysym == AltTab.Clutter.Left)
+                this._select(this._previousApp());
+            else if (keysym == AltTab.Clutter.Right)
+                this._select(this._nextApp());
+            else if (keysym == AltTab.Clutter.Down)
+                this._select(this._currentApp, 0);
+        }
+
+        return true;
+    };
+}
+
+/**
  * Debugging purposes.
  * @param label
  * @param callback
@@ -340,6 +395,11 @@ function main(extensionMeta) {
     }
     try {
         updateMessageTray();
+    } catch(e) {
+        Logger.error(e);
+    }
+    try {
+        fixAltTab();
     } catch(e) {
         Logger.error(e);
     }
