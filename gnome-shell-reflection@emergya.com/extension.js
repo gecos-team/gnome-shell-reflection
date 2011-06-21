@@ -29,6 +29,7 @@
  */
 
 const St = imports.gi.St;
+const Gio = imports.gi.Gio;
 const Gettext = imports.gettext.domain('gnome-shell');
 const _ = Gettext.gettext;
 
@@ -173,6 +174,9 @@ function updateMenus() {
  * Move the message tray to the top of the screen.
  */
 function updateMessageTray() {
+    
+    // Align summary items to the left
+    Main.messageTray._summaryBin.x_align = St.Align.START;
 
     Main.messageTray._setSizePosition = Lang.bind(Main.messageTray, function() {
     
@@ -285,19 +289,27 @@ function fixAltTab() {
  */
 function debugAddMenuItem(label, callback) {
 
-    label = label || "Debug item..."
-    callback = callback || function() {
-        Logger.notify("404", "Nothing to notify", false);
+    try {
+        
+        label = label || "Debug item..."
+        callback = callback || function() {
+            Logger.notify("404", "Nothing to notify", false);
+        }
+        
+        let item = null;
+        let children = Main.panel._leftBox.get_children();
+        let appMenu = Main.panel._applicationsmenu;
+        
+        item = new PopupMenu.PopupSeparatorMenuItem();
+        appMenu.menu.addMenuItem(item);
+        
+        item = new PopupMenu.PopupMenuItem(_(label));
+        item.connect('activate', callback);
+        appMenu.menu.addMenuItem(item);
+        
+    } catch (e) {
+        Logger.error(e);
     }
-    
-    let item = null;
-    
-    item = new PopupMenu.PopupSeparatorMenuItem();
-    Main.panel._statusmenu.menu.addMenuItem(item);
-    
-    item = new PopupMenu.PopupMenuItem(_(label));
-    item.connect('activate', Lang.bind(Main.panel._statusmenu, callback));
-    Main.panel._statusmenu.menu.addMenuItem(item);
 }
 
 function main(extensionMeta) {
@@ -308,7 +320,7 @@ function main(extensionMeta) {
         Logger.debug(o + ": " + extensionMeta[o]);
     }
     */
-    
+        
     try {
         
         updatePanel();
