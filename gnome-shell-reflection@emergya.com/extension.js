@@ -28,11 +28,9 @@
  * 
  */
 
+const St = imports.gi.St;
 const Gettext = imports.gettext.domain('gnome-shell');
 const _ = Gettext.gettext;
-
-const St = imports.gi.St;
-//const Mainloop = imports.mainloop;
 
 const Main = imports.ui.main;
 const Lang = imports.lang;
@@ -41,23 +39,6 @@ const MessageTray = imports.ui.messageTray;
 const LookingGlass = imports.ui.lookingGlass;
 const PopupMenu = imports.ui.popupMenu;
 const AltTab = imports.ui.altTab;
-
-const Side = {
-    HIDDEN: 0,
-    TOP: 1,
-    RIGHT: 2,
-    BOTTOM: 3,
-    LEFT: 4
-};
-
-const ShellConf = {
-    ACTIVATE_GECOS_SHELL: true,
-    PANEL_SIDE: Side.BOTTOM,
-    PANEL_CORNER_SIDE: Side.HIDDEN,
-    HOT_CORNER_SIDE: Side.HIDDEN,
-    MESSAGE_TRAY_SIDE: Side.TOP,
-    UPDATE_STATUS_MENU: false
-};
 
 Logger = {
     error: function(msg) {
@@ -81,9 +62,6 @@ Logger = {
  */
 function updatePanel() {
 
-    if (ShellConf.PANEL_SIDE != Side.BOTTOM)
-        return;
-
     Main.panel.relayout = Lang.bind(Main.panel, function() {
     
         this.__proto__.relayout.call(this);
@@ -91,76 +69,30 @@ function updatePanel() {
         let primary = global.get_primary_monitor();
         this.actor.set_position(primary.x, primary.y + primary.height - this.actor.height);
     });
-    
-    try {
-        updateMenus();
-    } catch(e) {
-        Logger.error(e);
-    }
-    try {
-        updatePanelCorner();
-    } catch(e) {
-        Logger.error(e);
-    }
-    try {
-        updateLookingGlass();
-    } catch(e) {
-        Logger.error(e);
-    }
 }
 
 /**
- * Move the panel corners to the bottom of the screen or hide them.
+ * Hide the panel corners.
  */
 function updatePanelCorner() {
         
-    if (ShellConf.PANEL_CORNER_SIDE != Side.HIDDEN && ShellConf.PANEL_CORNER_SIDE != Side.BOTTOM)
-        return;
-    
-    let relayout = null;
-    
-    if (ShellConf.PANEL_CORNER_SIDE == Side.HIDDEN) {
-        
-        relayout = function() {
-            let node = this.actor.get_theme_node();
+    let relayout = function() {
+        let node = this.actor.get_theme_node();
 
-            let cornerRadius = node.get_length("-panel-corner-radius");
-            let innerBorderWidth = node.get_length('-panel-corner-inner-border-width');
+        let cornerRadius = node.get_length("-panel-corner-radius");
+        let innerBorderWidth = node.get_length('-panel-corner-inner-border-width');
 
-            this.actor.set_size(cornerRadius, innerBorderWidth + cornerRadius);            
-            this.actor.set_position(-Main.panel.actor.width, -Main.panel.actor.height);
-        };
-        
-    } else if (ShellConf.PANEL_CORNER_SIDE == Side.BOTTOM) {
-
-        relayout = Main.panel._leftCorner.relayout;
-
-// Not implemented yet
-//
-//        relayout = function() {
-//            let node = this.actor.get_theme_node();
-//
-//            let cornerRadius = node.get_length("-panel-corner-radius");
-//            let innerBorderWidth = node.get_length('-panel-corner-inner-border-width');
-//
-//            this.actor.set_size(cornerRadius,
-//                                innerBorderWidth + cornerRadius);
-//            if (this._side == St.Side.LEFT)
-//                this.actor.set_position(Main.panel.actor.x,
-//                                        Main.panel.actor.y - Main.panel.actor.height - innerBorderWidth);
-//            else
-//                this.actor.set_position(Main.panel.actor.x + Main.panel.actor.width - cornerRadius,
-//                                        Main.panel.actor.y - Main.panel.actor.height - innerBorderWidth);
-//        };
-    }
+        this.actor.set_size(cornerRadius, innerBorderWidth + cornerRadius);            
+        this.actor.set_position(-Main.panel.actor.width, -Main.panel.actor.height);
+    };
     
     Main.panel._leftCorner.relayout = Lang.bind(Main.panel._leftCorner, relayout);
     Main.panel._rightCorner.relayout = Lang.bind(Main.panel._rightCorner, relayout);
 }
 
 /**
- * Attach the LookingGlass to the messageTray so
- * it will stay on the top of the screen.
+ * Attach the LookingGlass to the messageTray parent,
+ * so it will stay on the top of the screen.
  */
 function updateLookingGlass() {
 
@@ -179,18 +111,18 @@ function updateHotCorners() {
         let cornerX = null;
         let cornerY = null;
         
-        if (ShellConf.HOT_CORNER_SIDE == Side.BOTTOM) {
-    
-            // TODO: Currently the animated graphic is not shown.
-            let pos = corner.actor.get_position();
-            cornerX = pos[0];
-            cornerY = pos[1] + monitor.height - 1;
-            
-        } else if (ShellConf.HOT_CORNER_SIDE == Side.HIDDEN) {
+//        if (ShellConf.HOT_CORNER_SIDE == Side.BOTTOM) {
+//    
+//            // TODO: Currently the animated graphic is not shown.
+//            let pos = corner.actor.get_position();
+//            cornerX = pos[0];
+//            cornerY = pos[1] + monitor.height - 1;
+//            
+//        } else if (ShellConf.HOT_CORNER_SIDE == Side.HIDDEN) {
         
             cornerX = -1;
             cornerY = -1;
-        }
+//        }
         
         try {
             corner.actor.set_position(cornerX, cornerY);
@@ -213,7 +145,6 @@ function updateHotCorners() {
             for (let i = 0, l = Main.hotCorners.length; i < l; i++) {
                 let corner = Main.hotCorners[i];
                 setHotCornerPosition(corner, primary);
-//                Logger.debug("Monitor " + i + ": X = " + cornerX + ", Y = " + cornerY);
             }
         }
     })(_relayout);
@@ -242,9 +173,6 @@ function updateMenus() {
  * Move the message tray to the top of the screen.
  */
 function updateMessageTray() {
-
-    if (ShellConf.MESSAGE_TRAY_SIDE != Side.TOP)
-        return;
 
     Main.messageTray._setSizePosition = Lang.bind(Main.messageTray, function() {
     
@@ -301,6 +229,7 @@ function updateMessageTray() {
 function fixAltTab() {
 
     AltTab.AltTabPopup.prototype._keyPressEvent = function(actor, event) {
+        
         let keysym = event.get_key_symbol();
         let event_state = AltTab.Shell.get_event_state(event);
         let backwards = event_state & AltTab.Clutter.ModifierType.SHIFT_MASK;
@@ -379,27 +308,17 @@ function main(extensionMeta) {
         Logger.debug(o + ": " + extensionMeta[o]);
     }
     */
-
-    if (!ShellConf.ACTIVATE_GECOS_SHELL)
-        return;
     
     try {
+        
         updatePanel();
-    } catch(e) {
-        Logger.error(e);
-    }
-    try {
+        updatePanelCorner();
+        updateMenus();
         updateHotCorners();
-    } catch(e) {
-        Logger.error(e);
-    }
-    try {
         updateMessageTray();
-    } catch(e) {
-        Logger.error(e);
-    }
-    try {
+        updateLookingGlass();
         fixAltTab();
+        
     } catch(e) {
         Logger.error(e);
     }
