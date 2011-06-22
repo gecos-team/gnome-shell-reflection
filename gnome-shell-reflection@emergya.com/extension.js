@@ -34,6 +34,7 @@ const Gettext = imports.gettext.domain('gnome-shell');
 const _ = Gettext.gettext;
 
 const Main = imports.ui.main;
+const Panel = imports.ui.panel;
 const Lang = imports.lang;
 const BoxPointer = imports.ui.boxpointer;
 const MessageTray = imports.ui.messageTray;
@@ -149,6 +150,14 @@ function updateHotCorners() {
             }
         }
     })(_relayout);
+}
+
+/**
+ * Tray icons modifications.
+ */
+function updateTrayIcons() {
+
+    delete Panel.STANDARD_TRAY_ICON_SHELL_IMPLEMENTATION['a11y'];
 }
 
 /**
@@ -320,13 +329,14 @@ function main(extensionMeta) {
         Logger.debug(o + ": " + extensionMeta[o]);
     }
     */
-        
+            
     try {
         
         updatePanel();
         updatePanelCorner();
         updateMenus();
         updateHotCorners();
+        updateTrayIcons();
         updateMessageTray();
         updateLookingGlass();
         fixAltTab();
