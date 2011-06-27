@@ -42,6 +42,18 @@ const LookingGlass = imports.ui.lookingGlass;
 const PopupMenu = imports.ui.popupMenu;
 const AltTab = imports.ui.altTab;
 
+const Side = {
+    HIDDEN: 0,
+    SHOWN: 1,
+    TOP: 2,
+    BOTTOM: 3,
+    LEFT: 4,
+    RIGHT: 5
+};
+
+const UPDATE_HOT_CORNERS = Side.HIDDEN;
+const TRAY_ICON_ACCESSIBILITY = Side.HIDDEN;
+
 Logger = {
     error: function(msg) {
         return Main._log('[gs-reflection error]:', msg);
@@ -105,6 +117,9 @@ function updateLookingGlass() {
 /**
  * Move the hot corners to the bottom of the screen
  * or hide them.
+ * 
+ * See UPDATE_HOT_CORNERS constant, some people may want the
+ * HotCorner feature back.
  */
 function updateHotCorners() {
 
@@ -113,18 +128,22 @@ function updateHotCorners() {
         let cornerX = null;
         let cornerY = null;
         
-//        if (ShellConf.HOT_CORNER_SIDE == Side.BOTTOM) {
-//    
-//            // TODO: Currently the animated graphic is not shown.
-//            let pos = corner.actor.get_position();
-//            cornerX = pos[0];
-//            cornerY = pos[1] + monitor.height - 1;
-//            
-//        } else if (ShellConf.HOT_CORNER_SIDE == Side.HIDDEN) {
+        if (UPDATE_HOT_CORNERS == Side.TOP) {
+            
+            return;
+            
+        } else if (UPDATE_HOT_CORNERS == Side.BOTTOM) {
+    
+            // TODO: Currently the animated graphic is not shown.
+            let pos = corner.actor.get_position();
+            cornerX = pos[0];
+            cornerY = pos[1] + monitor.height - 1;
+            
+        } else if (UPDATE_HOT_CORNERS == Side.HIDDEN) {
         
             cornerX = -1;
             cornerY = -1;
-//        }
+        }
         
         try {
             corner.actor.set_position(cornerX, cornerY);
@@ -157,7 +176,9 @@ function updateHotCorners() {
  */
 function updateTrayIcons() {
 
-    delete Panel.STANDARD_TRAY_ICON_SHELL_IMPLEMENTATION['a11y'];
+    // Remove the accessibility icon.
+    if (TRAY_ICON_ACCESSIBILITY == Side.HIDDEN)
+        delete Panel.STANDARD_TRAY_ICON_SHELL_IMPLEMENTATION['a11y'];
 }
 
 /**
