@@ -187,6 +187,7 @@ function updateMessageTray() {
     // Align summary items to the left
     Main.messageTray._summaryBin.x_align = St.Align.START;
 
+    // Move the message tray to the top of the screen.
     Main.messageTray._setSizePosition = Lang.bind(Main.messageTray, function() {
     
         this.__proto__._setSizePosition.call(this);
@@ -200,6 +201,7 @@ function updateMessageTray() {
                                            4 /* BarrierNegativeX */);
     });
 
+    // Change the direction of the animation when showing the tray bar.
     Main.messageTray._showTray = Lang.bind(Main.messageTray, function() {
     
         //this.__proto__._showTray.call(this);
@@ -215,6 +217,7 @@ function updateMessageTray() {
                     });
     });
 
+    // Change the direction of the animation when hiding the tray bar.
     Main.messageTray._hideTray = Lang.bind(Main.messageTray, function() {
     
         //this.__proto__._hideTray.call(this);
@@ -229,8 +232,34 @@ function updateMessageTray() {
                       transition: 'easeOutQuad'
                     });
     });
+
+    // Change the direction of the animation when hiding the notification.
+    Main.messageTray._hideNotification = Lang.bind(Main.messageTray, function() {
+
+        let State = MessageTray.State;
+        let ANIMATION_TIME = MessageTray.ANIMATION_TIME;
+        
+        this._focusGrabber.ungrabFocus();
+        if (this._notificationExpandedId) {
+            this._notification.disconnect(this._notificationExpandedId);
+            this._notificationExpandedId = 0;
+        }
+
+        this._tween(this._notificationBin, '_notificationState', State.HIDDEN,
+                    { y: -this.actor.height,
+                      opacity: 0,
+                      time: ANIMATION_TIME,
+                      transition: 'easeOutQuad',
+                      onComplete: this._hideNotificationCompleted,
+                      onCompleteScope: this
+                    });
+    });
     
-    // Notifications menu (SummaryItems)
+    // Suppress the animation when the mouse is over the notification.
+    Main.messageTray._onNotificationExpanded = Lang.bind(Main.messageTray, function() {
+    });
+    
+    // SummaryItems menus.
     Main.messageTray._summaryBoxPointer._arrowSide = St.Side.TOP;
 
     Main.messageTray._setSizePosition();
