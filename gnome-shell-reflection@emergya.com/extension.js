@@ -80,7 +80,7 @@ function updatePanel() {
     
         this.__proto__.relayout.call(this);
         
-        let primary = global.get_primary_monitor();
+        let primary = Main.layoutManager.primaryMonitor;
         this.actor.set_position(primary.x, primary.y + primary.height - this.actor.height);
     });
 }
@@ -161,7 +161,7 @@ function updateHotCorners() {
             
             // TODO: Currently only uses the primary monitor, need to create
             // a HotCorner in each monitor.
-            let primary = global.get_primary_monitor();
+            let primary = Main.layoutManager.primaryMonitor;
     
             for (let i = 0, l = Main.hotCorners.length; i < l; i++) {
                 let corner = Main.hotCorners[i];
@@ -213,7 +213,7 @@ function updateMessageTray() {
     
         this.__proto__._setSizePosition.call(this);
 
-        let primary = global.get_primary_monitor();
+        let primary = Main.layoutManager.primaryMonitor;
         this.actor.y = primary.y - this.actor.height + 1;
         
         this._pointerBarrier =
@@ -230,7 +230,7 @@ function updateMessageTray() {
         let State = MessageTray.State;
         let ANIMATION_TIME = MessageTray.ANIMATION_TIME;
         
-        let primary = global.get_primary_monitor();
+        let primary = Main.layoutManager.primaryMonitor;
         this._tween(this.actor, '_trayState', State.SHOWN,
                     { y: primary.y,
                       time: ANIMATION_TIME,
@@ -246,7 +246,7 @@ function updateMessageTray() {
         let State = MessageTray.State;
         let ANIMATION_TIME = MessageTray.ANIMATION_TIME;
         
-        let primary = global.get_primary_monitor();
+        let primary = Main.layoutManager.primaryMonitor;
         this._tween(this.actor, '_trayState', State.HIDDEN,
                     { y: primary.y - this.actor.height + 1,
                       time: ANIMATION_TIME,
