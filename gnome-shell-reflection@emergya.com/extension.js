@@ -54,7 +54,7 @@ const Side = {
 const UPDATE_HOT_CORNERS = Side.HIDDEN;
 const TRAY_ICON_ACCESSIBILITY = Side.HIDDEN;
 
-Logger = {
+let Logger = {
     error: function(msg) {
         return Main._log('[gs-reflection error]:', msg);
     },
@@ -76,13 +76,15 @@ Logger = {
  */
 function updatePanel() {
 
-    Main.panel.relayout = Lang.bind(Main.panel, function() {
+    Main.panel._relayout = Lang.bind(Main.panel, function() {
     
-        this.__proto__.relayout.call(this);
+        this.__proto__._relayout.call(this);
         
         let primary = Main.layoutManager.primaryMonitor;
         this.actor.set_position(primary.x, primary.y + primary.height - this.actor.height);
     });
+    
+    Main.panel._relayout();
 }
 
 /**
@@ -382,8 +384,8 @@ function main(extensionMeta) {
             
     try {
         
-        updatePanel();
         updatePanelCorner();
+        updatePanel();
         updateMenus();
         updateHotCorners();
         updateTrayIcons();
