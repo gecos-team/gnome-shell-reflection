@@ -28,6 +28,10 @@
  * 
  */
 
+/**
+ * @branch 3.1.x
+ */
+
 const St = imports.gi.St;
 const Gio = imports.gi.Gio;
 const Gettext = imports.gettext.domain('gnome-shell');
@@ -374,13 +378,6 @@ function debugAddMenuItem(label, callback) {
 }
 
 function main(extensionMeta) {
-
-	/*
-    Logger.debug("extensionMeta: ");
-    for (let o in extensionMeta) {
-        Logger.debug(o + ": " + extensionMeta[o]);
-    }
-    */
             
     try {
         
