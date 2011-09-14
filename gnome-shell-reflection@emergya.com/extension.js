@@ -394,3 +394,13 @@ function main(extensionMeta) {
         Logger.error(e);
     }
 }
+
+function init(meta) {
+    main(meta);
+}
+
+function enable() {
+}
+
+function disable() {
+}
