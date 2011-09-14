@@ -54,7 +54,7 @@ const Side = {
 const UPDATE_HOT_CORNERS = Side.HIDDEN;
 const TRAY_ICON_ACCESSIBILITY = Side.HIDDEN;
 
-Logger = {
+let Logger = {
     error: function(msg) {
         return Main._log('[gs-reflection error]:', msg);
     },
