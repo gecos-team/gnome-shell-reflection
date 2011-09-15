@@ -56,7 +56,9 @@ const Side = {
 };
 
 const UPDATE_HOT_CORNERS = Side.HIDDEN;
-const TRAY_ICON_ACCESSIBILITY = Side.HIDDEN;
+const INDICATORS = {
+    'a11y': Side.HIDDEN
+}
 
 let Logger = {
     error: function(msg) {
@@ -182,9 +184,14 @@ function updateHotCorners() {
  */
 function updateTrayIcons() {
 
-    // Remove the accessibility icon.
-    if (TRAY_ICON_ACCESSIBILITY == Side.HIDDEN)
-        delete Panel.STANDARD_TRAY_ICON_SHELL_IMPLEMENTATION['a11y'];
+    // Remove indicators specified in INDICATORS array.
+    for (let role in INDICATORS) {
+        if (INDICATORS[role] != Side.HIDDEN)
+            continue;
+        let indicator = Main.panel._statusArea[role];
+        Main.panel._statusBox.remove_actor(indicator.actor);
+    }
+    
 }
 
 /**
@@ -368,7 +375,7 @@ function main(extensionMeta) {
         //updatePanelCorner();
         updateMenus();
         //updateHotCorners();
-        //updateTrayIcons();
+        updateTrayIcons();
         updateMessageTray();
         //fixAltTab();
         
