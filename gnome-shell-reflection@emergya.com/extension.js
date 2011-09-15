@@ -195,13 +195,12 @@ function updateMenus() {
 
     // New menus inherits the new behavior.
     BoxPointer.BoxPointer.prototype._arrowSide = St.Side.BOTTOM;
-
-    // Wait until all the indicators are loaded, so we can change all the menus.
-    Main.panel.startStatusArea = Lang.bind(Main.panel, function() {
     
-        this.__proto__.startStatusArea.call(this);
-
-        this._menus._menus.forEach(function(menu) {
+    Main.statusIconDispatcher.connect('status-icon-added', function(o, icon, role) {
+    
+        // Missed a reference to the menu object in this callback,
+        // so traverse all the previously added menus.
+        Main.panel._menus._menus.forEach(function(menu) {
             menu.menu._boxPointer._arrowSide = St.Side.BOTTOM;
         });
     });
