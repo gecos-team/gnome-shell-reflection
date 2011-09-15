@@ -78,17 +78,18 @@ let Logger = {
 /**
  * Move the panel to the bottom of the screen.
  */
-function updatePanel() {
+function updateLayout() {
+    
+    Main.layoutManager._updateBoxes = function() {        
+        this.panelBox.set_position(this.primaryMonitor.x, this.primaryMonitor.y + this.primaryMonitor.height - this.panelBox.height);
+        this.panelBox.set_size(this.primaryMonitor.width, -1);
 
-    Main.panel._relayout = Lang.bind(Main.panel, function() {
+        this.trayBox.set_position(this.bottomMonitor.x, this.bottomMonitor.y);
+        this.trayBox.set_size(this.bottomMonitor.width, -1);
+    };
     
-        this.__proto__._relayout.call(this);
-        
-        let primary = Main.layoutManager.primaryMonitor;
-        this.actor.set_position(primary.x, primary.y + primary.height - this.actor.height);
-    });
-    
-    Main.panel._relayout();
+    //Main.layoutManager._updateBoxes();
+    global.screen.emit('monitors-changed');
 }
 
 /**
@@ -381,14 +382,16 @@ function main(extensionMeta) {
             
     try {
         
-        updatePanelCorner();
-        updatePanel();
-        updateMenus();
-        updateHotCorners();
-        updateTrayIcons();
-        updateMessageTray();
+        updateLayout();
         updateLookingGlass();
-        fixAltTab();
+        //updatePanelCorner();
+        updateMenus();
+        //updateHotCorners();
+        //updateTrayIcons();
+        updateMessageTray();
+        //fixAltTab();
+        
+        Logger.notify('testing', '', false);
         
     } catch(e) {
         Logger.error(e);
