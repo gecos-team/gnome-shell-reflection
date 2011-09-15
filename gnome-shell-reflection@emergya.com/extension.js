@@ -281,36 +281,6 @@ function updateMessageTray() {
     Main.messageTray._summaryBoxPointer._arrowSide = St.Side.TOP;
 }
 
-/**
- * Debugging purposes.
- * @param label
- * @param callback
- */
-function debugAddMenuItem(label, callback) {
-
-    try {
-        
-        label = label || "Debug item..."
-        callback = callback || function() {
-            Logger.notify("404", "Nothing to notify", false);
-        }
-        
-        let item = null;
-        let children = Main.panel._leftBox.get_children();
-        let appMenu = Main.panel._applicationsmenu;
-        
-        item = new PopupMenu.PopupSeparatorMenuItem();
-        appMenu.menu.addMenuItem(item);
-        
-        item = new PopupMenu.PopupMenuItem(_(label));
-        item.connect('activate', callback);
-        appMenu.menu.addMenuItem(item);
-        
-    } catch (e) {
-        Logger.error(e);
-    }
-}
-
 function main(extensionMeta) {
             
     try {
@@ -322,8 +292,6 @@ function main(extensionMeta) {
         //updateHotCorners();
         updateTrayIcons();
         updateMessageTray();
-        
-        Logger.notify('testing', '', false);
         
     } catch(e) {
         Logger.error(e);
