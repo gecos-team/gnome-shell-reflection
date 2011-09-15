@@ -203,6 +203,9 @@ function updateMenus() {
             menu.menu._boxPointer._arrowSide = St.Side.BOTTOM;
         });
     });
+    
+    // Be sure the signal is emitted at least once.
+    Main.statusIconDispatcher.emit('status-icon-added');
 }
 
 /**
