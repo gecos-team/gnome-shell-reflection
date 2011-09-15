@@ -97,19 +97,9 @@ function updateLayout() {
  * Hide the panel corners.
  */
 function updatePanelCorner() {
-        
-    let relayout = function() {
-        let node = this.actor.get_theme_node();
-
-        let cornerRadius = node.get_length("-panel-corner-radius");
-        let innerBorderWidth = node.get_length('-panel-corner-inner-border-width');
-
-        this.actor.set_size(cornerRadius, innerBorderWidth + cornerRadius);            
-        this.actor.set_position(-Main.panel.actor.width, -Main.panel.actor.height);
-    };
     
-    Main.panel._leftCorner.relayout = Lang.bind(Main.panel._leftCorner, relayout);
-    Main.panel._rightCorner.relayout = Lang.bind(Main.panel._rightCorner, relayout);
+    Main.panel._leftCorner.actor.hide();
+    Main.panel._rightCorner.actor.hide();
 }
 
 /**
@@ -281,13 +271,13 @@ function updateMessageTray() {
     Main.messageTray._summaryBoxPointer._arrowSide = St.Side.TOP;
 }
 
-function main(extensionMeta) {
+function main(meta) {
             
     try {
         
         updateLayout();
         updateLookingGlass();
-        //updatePanelCorner();
+        updatePanelCorner();
         updateMenus();
         //updateHotCorners();
         updateTrayIcons();
