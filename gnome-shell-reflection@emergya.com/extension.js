@@ -88,7 +88,6 @@ function updateLayout() {
         this.trayBox.set_size(this.bottomMonitor.width, -1);
     };
     
-    //Main.layoutManager._updateBoxes();
     global.screen.emit('monitors-changed');
 }
 
