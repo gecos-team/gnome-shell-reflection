@@ -56,6 +56,7 @@ const Side = {
 };
 
 const UPDATE_HOT_CORNERS = Side.HIDDEN;
+
 const INDICATORS = {
     'a11y': Side.HIDDEN
 }
@@ -121,8 +122,10 @@ function updateLookingGlass() {
  */
 function updateHotCorners() {
 
-    function setHotCornerPosition(corner, monitor) {
+    Main.layoutManager._updateHotCorners = function() {
     
+        Main.layoutManager.__proto__._updateHotCorners.call(this);
+        
         let cornerX = null;
         let cornerY = null;
         
@@ -131,42 +134,36 @@ function updateHotCorners() {
             return;
             
         } else if (UPDATE_HOT_CORNERS == Side.BOTTOM) {
+
     
             // TODO: Currently the animated graphic is not shown.
-            let pos = corner.actor.get_position();
-            cornerX = pos[0];
-            cornerY = pos[1] + monitor.height - 1;
+            // TODO: Currently only handles the primary monitor.
+            let primary = Main.layoutManager.primaryMonitor;
+            cornerX = 0;
+            cornerY = primary.height - 1;
             
         } else if (UPDATE_HOT_CORNERS == Side.HIDDEN) {
         
-            cornerX = -1;
-            cornerY = -1;
+            for (let i = 0; i < this._hotCorners.length; i++) {
+                this._hotCorners[i].destroy();
+            }
+            this._hotCorners = [];
+            
+            return;
         }
         
         try {
-            corner.actor.set_position(cornerX, cornerY);
+            for (let i = 0; i < this._hotCorners.length; i++) {
+                let corner = this._hotCorners[i];
+                corner.actor.set_position(cornerX, cornerY);
+            }
         } catch(e) {
             Logger.error(e);
         }
-    }
-    
-    let _relayout = Main._relayout;
-    
-    Main._relayout = (function(_relayout) {
-        return function() {
         
-            _relayout();
-            
-            // TODO: Currently only uses the primary monitor, need to create
-            // a HotCorner in each monitor.
-            let primary = Main.layoutManager.primaryMonitor;
+    };
     
-            for (let i = 0, l = Main.hotCorners.length; i < l; i++) {
-                let corner = Main.hotCorners[i];
-                setHotCornerPosition(corner, primary);
-            }
-        }
-    })(_relayout);
+    global.screen.emit('monitors-changed');
 }
 
 /**
@@ -195,14 +192,18 @@ function updateMenus() {
     Main.statusIconDispatcher.connect('status-icon-added', function(o, icon, role) {
     
         // Missed a reference to the menu object in this callback,
-        // so traverse all the previously added menus.
+        // need to traverse all the menus.
         Main.panel._menus._menus.forEach(function(menu) {
             menu.menu._boxPointer._arrowSide = St.Side.BOTTOM;
         });
     });
     
     // Be sure the signal is emitted at least once.
-    Main.statusIconDispatcher.emit('status-icon-added');
+    try {
+        Main.statusIconDispatcher.emit('status-icon-added');
+    } catch (e) {
+        Logger.log(e);
+    }
 }
 
 /**
@@ -279,7 +280,7 @@ function main(meta) {
         updateLookingGlass();
         updatePanelCorner();
         updateMenus();
-        //updateHotCorners();
+        updateHotCorners();
         updateTrayIcons();
         updateMessageTray();
         
