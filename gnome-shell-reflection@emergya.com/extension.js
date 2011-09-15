@@ -212,28 +212,9 @@ function updateMenus() {
  */
 function updateMessageTray() {
     
-    // Align summary items to the left
-    Main.messageTray._summaryBin.x_align = St.Align.START;
-
-    // Move the message tray to the top of the screen.
-    Main.messageTray._setSizePosition = Lang.bind(Main.messageTray, function() {
-    
-        this.__proto__._setSizePosition.call(this);
-
-        let primary = Main.layoutManager.primaryMonitor;
-        this.actor.y = primary.y - this.actor.height + 1;
-        
-        this._pointerBarrier =
-            global.create_pointer_barrier(primary.x + primary.width, primary.y + this.actor.height,
-                                          primary.x + primary.width, primary.y,
-                                           4 /* BarrierNegativeX */);
-    });
-
     // Change the direction of the animation when showing the tray bar.
     Main.messageTray._showTray = Lang.bind(Main.messageTray, function() {
     
-        //this.__proto__._showTray.call(this);
-
         let State = MessageTray.State;
         let ANIMATION_TIME = MessageTray.ANIMATION_TIME;
         
@@ -247,8 +228,6 @@ function updateMessageTray() {
 
     // Change the direction of the animation when hiding the tray bar.
     Main.messageTray._hideTray = Lang.bind(Main.messageTray, function() {
-    
-        //this.__proto__._hideTray.call(this);
         
         let State = MessageTray.State;
         let ANIMATION_TIME = MessageTray.ANIMATION_TIME;
@@ -284,13 +263,14 @@ function updateMessageTray() {
     });
     
     // Suppress the animation when the mouse is over the notification.
-    Main.messageTray._onNotificationExpanded = Lang.bind(Main.messageTray, function() {
+    Main.messageTray.___onNotificationExpanded = Lang.bind(Main.messageTray, function() {
     });
+    
+    // Align summary items to the left
+    Main.messageTray._summaryBin.x_align = St.Align.START;
     
     // SummaryItems menus.
     Main.messageTray._summaryBoxPointer._arrowSide = St.Side.TOP;
-
-    Main.messageTray._setSizePosition();
 }
 
 /**
