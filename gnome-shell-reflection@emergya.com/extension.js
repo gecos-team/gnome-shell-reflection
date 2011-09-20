@@ -52,7 +52,10 @@ const Side = {
 };
 
 const UPDATE_HOT_CORNERS = Side.HIDDEN;
-const TRAY_ICON_ACCESSIBILITY = Side.HIDDEN;
+
+const INDICATORS = {
+    'a11y': Side.HIDDEN
+}
 
 let Logger = {
     error: function(msg) {
@@ -74,34 +77,26 @@ let Logger = {
 /**
  * Move the panel to the bottom of the screen.
  */
-function updatePanel() {
-
-    Main.panel.relayout = Lang.bind(Main.panel, function() {
+function updateLayout() {
     
-        this.__proto__.relayout.call(this);
-        
-        let primary = global.get_primary_monitor();
-        this.actor.set_position(primary.x, primary.y + primary.height - this.actor.height);
-    });
+    Main.layoutManager._updateBoxes = function() {        
+        this.panelBox.set_position(this.primaryMonitor.x, this.primaryMonitor.y + this.primaryMonitor.height - this.panelBox.height);
+        this.panelBox.set_size(this.primaryMonitor.width, -1);
+
+        this.trayBox.set_position(this.bottomMonitor.x, this.bottomMonitor.y);
+        this.trayBox.set_size(this.bottomMonitor.width, -1);
+    };
+    
+    global.screen.emit('monitors-changed');
 }
 
 /**
  * Hide the panel corners.
  */
 function updatePanelCorner() {
-        
-    let relayout = function() {
-        let node = this.actor.get_theme_node();
-
-        let cornerRadius = node.get_length("-panel-corner-radius");
-        let innerBorderWidth = node.get_length('-panel-corner-inner-border-width');
-
-        this.actor.set_size(cornerRadius, innerBorderWidth + cornerRadius);            
-        this.actor.set_position(-Main.panel.actor.width, -Main.panel.actor.height);
-    };
     
-    Main.panel._leftCorner.relayout = Lang.bind(Main.panel._leftCorner, relayout);
-    Main.panel._rightCorner.relayout = Lang.bind(Main.panel._rightCorner, relayout);
+    Main.panel._leftCorner.actor.hide();
+    Main.panel._rightCorner.actor.hide();
 }
 
 /**
@@ -123,8 +118,10 @@ function updateLookingGlass() {
  */
 function updateHotCorners() {
 
-    function setHotCornerPosition(corner, monitor) {
+    Main.layoutManager._updateHotCorners = function() {
     
+        Main.layoutManager.__proto__._updateHotCorners.call(this);
+        
         let cornerX = null;
         let cornerY = null;
         
@@ -133,42 +130,36 @@ function updateHotCorners() {
             return;
             
         } else if (UPDATE_HOT_CORNERS == Side.BOTTOM) {
+
     
             // TODO: Currently the animated graphic is not shown.
-            let pos = corner.actor.get_position();
-            cornerX = pos[0];
-            cornerY = pos[1] + monitor.height - 1;
+            // TODO: Currently only handles the primary monitor.
+            let primary = Main.layoutManager.primaryMonitor;
+            cornerX = 0;
+            cornerY = primary.height - 1;
             
         } else if (UPDATE_HOT_CORNERS == Side.HIDDEN) {
         
-            cornerX = -1;
-            cornerY = -1;
+            for (let i = 0; i < this._hotCorners.length; i++) {
+                this._hotCorners[i].destroy();
+            }
+            this._hotCorners = [];
+            
+            return;
         }
         
         try {
-            corner.actor.set_position(cornerX, cornerY);
+            for (let i = 0; i < this._hotCorners.length; i++) {
+                let corner = this._hotCorners[i];
+                corner.actor.set_position(cornerX, cornerY);
+            }
         } catch(e) {
             Logger.error(e);
         }
-    }
-    
-    let _relayout = Main._relayout;
-    
-    Main._relayout = (function(_relayout) {
-        return function() {
         
-            _relayout();
-            
-            // TODO: Currently only uses the primary monitor, need to create
-            // a HotCorner in each monitor.
-            let primary = global.get_primary_monitor();
+    };
     
-            for (let i = 0, l = Main.hotCorners.length; i < l; i++) {
-                let corner = Main.hotCorners[i];
-                setHotCornerPosition(corner, primary);
-            }
-        }
-    })(_relayout);
+    global.screen.emit('monitors-changed');
 }
 
 /**
@@ -176,9 +167,14 @@ function updateHotCorners() {
  */
 function updateTrayIcons() {
 
-    // Remove the accessibility icon.
-    if (TRAY_ICON_ACCESSIBILITY == Side.HIDDEN)
-        delete Panel.STANDARD_TRAY_ICON_SHELL_IMPLEMENTATION['a11y'];
+    // Remove indicators specified in INDICATORS array.
+    for (let role in INDICATORS) {
+        if (INDICATORS[role] != Side.HIDDEN)
+            continue;
+        let indicator = Main.panel._statusArea[role];
+        Main.panel._statusBox.remove_actor(indicator.actor);
+    }
+    
 }
 
 /**
@@ -188,16 +184,22 @@ function updateMenus() {
 
     // New menus inherits the new behavior.
     BoxPointer.BoxPointer.prototype._arrowSide = St.Side.BOTTOM;
-
-    // Wait until all the indicators are loaded, so we can change all the menus.
-    Main.panel.startStatusArea = Lang.bind(Main.panel, function() {
     
-        this.__proto__.startStatusArea.call(this);
-
-        this._menus._menus.forEach(function(menu) {
+    Main.statusIconDispatcher.connect('status-icon-added', function(o, icon, role) {
+    
+        // Missed a reference to the menu object in this callback,
+        // need to traverse all the menus.
+        Main.panel._menus._menus.forEach(function(menu) {
             menu.menu._boxPointer._arrowSide = St.Side.BOTTOM;
         });
     });
+    
+    // Be sure the signal is emitted at least once.
+    try {
+        Main.statusIconDispatcher.emit('status-icon-added');
+    } catch (e) {
+        Logger.log(e);
+    }
 }
 
 /**
@@ -205,32 +207,13 @@ function updateMenus() {
  */
 function updateMessageTray() {
     
-    // Align summary items to the left
-    Main.messageTray._summaryBin.x_align = St.Align.START;
-
-    // Move the message tray to the top of the screen.
-    Main.messageTray._setSizePosition = Lang.bind(Main.messageTray, function() {
-    
-        this.__proto__._setSizePosition.call(this);
-
-        let primary = global.get_primary_monitor();
-        this.actor.y = primary.y - this.actor.height + 1;
-        
-        this._pointerBarrier =
-            global.create_pointer_barrier(primary.x + primary.width, primary.y + this.actor.height,
-                                          primary.x + primary.width, primary.y,
-                                           4 /* BarrierNegativeX */);
-    });
-
     // Change the direction of the animation when showing the tray bar.
     Main.messageTray._showTray = Lang.bind(Main.messageTray, function() {
     
-        //this.__proto__._showTray.call(this);
-
         let State = MessageTray.State;
         let ANIMATION_TIME = MessageTray.ANIMATION_TIME;
         
-        let primary = global.get_primary_monitor();
+        let primary = Main.layoutManager.primaryMonitor;
         this._tween(this.actor, '_trayState', State.SHOWN,
                     { y: primary.y,
                       time: ANIMATION_TIME,
@@ -240,13 +223,11 @@ function updateMessageTray() {
 
     // Change the direction of the animation when hiding the tray bar.
     Main.messageTray._hideTray = Lang.bind(Main.messageTray, function() {
-    
-        //this.__proto__._hideTray.call(this);
         
         let State = MessageTray.State;
         let ANIMATION_TIME = MessageTray.ANIMATION_TIME;
         
-        let primary = global.get_primary_monitor();
+        let primary = Main.layoutManager.primaryMonitor;
         this._tween(this.actor, '_trayState', State.HIDDEN,
                     { y: primary.y - this.actor.height + 1,
                       time: ANIMATION_TIME,
@@ -277,121 +258,39 @@ function updateMessageTray() {
     });
     
     // Suppress the animation when the mouse is over the notification.
-    Main.messageTray._onNotificationExpanded = Lang.bind(Main.messageTray, function() {
+    Main.messageTray.___onNotificationExpanded = Lang.bind(Main.messageTray, function() {
     });
+    
+    // Align summary items to the left
+    Main.messageTray._summaryBin.x_align = St.Align.START;
     
     // SummaryItems menus.
     Main.messageTray._summaryBoxPointer._arrowSide = St.Side.TOP;
-
-    Main.messageTray._setSizePosition();
 }
 
-/**
- * Fix the switch backward feature (ALT+SHIFT+TAB)
- */
-function fixAltTab() {
-
-    AltTab.AltTabPopup.prototype._keyPressEvent = function(actor, event) {
-        
-        let keysym = event.get_key_symbol();
-        let event_state = AltTab.Shell.get_event_state(event);
-        let backwards = event_state & AltTab.Clutter.ModifierType.SHIFT_MASK;
-        let action = global.screen.get_display().get_keybinding_action(event.get_key_code(), event_state);
-
-        this._disableHover();
-
-        if (action == AltTab.Meta.KeyBindingAction.SWITCH_GROUP
-            || action == AltTab.Meta.KeyBindingAction.SWITCH_GROUP_BACKWARD)
-            this._select(this._currentApp, backwards ? this._previousWindow() : this._nextWindow());
-        else if (keysym == AltTab.Clutter.Escape)
-            this.destroy();
-        else if (this._thumbnailsFocused) {
-            if (action == AltTab.Meta.KeyBindingAction.SWITCH_WINDOWS
-                || action == AltTab.Meta.KeyBindingAction.SWITCH_WINDOWS_BACKWARD)
-                if (backwards) {
-                    if (this._currentWindow == 0 || this._currentWindow == -1)
-                        this._select(this._previousApp());
-                    else
-                        this._select(this._currentApp, this._previousWindow());
-                } else {
-                    if (this._currentWindow == this._appIcons[this._currentApp].cachedWindows.length - 1)
-                        this._select(this._nextApp());
-                    else
-                        this._select(this._currentApp, this._nextWindow());
-                }
-            else if (keysym == AltTab.Clutter.Left)
-                this._select(this._currentApp, this._previousWindow());
-            else if (keysym == AltTab.Clutter.Right)
-                this._select(this._currentApp, this._nextWindow());
-            else if (keysym == AltTab.Clutter.Up)
-                this._select(this._currentApp, null, true);
-        } else {
-            if (action == AltTab.Meta.KeyBindingAction.SWITCH_WINDOWS
-                || action == AltTab.Meta.KeyBindingAction.SWITCH_WINDOWS_BACKWARD)
-                this._select(backwards ? this._previousApp() : this._nextApp());
-            else if (keysym == AltTab.Clutter.Left)
-                this._select(this._previousApp());
-            else if (keysym == AltTab.Clutter.Right)
-                this._select(this._nextApp());
-            else if (keysym == AltTab.Clutter.Down)
-                this._select(this._currentApp, 0);
-        }
-
-        return true;
-    };
-}
-
-/**
- * Debugging purposes.
- * @param label
- * @param callback
- */
-function debugAddMenuItem(label, callback) {
-
-    try {
-        
-        label = label || "Debug item..."
-        callback = callback || function() {
-            Logger.notify("404", "Nothing to notify", false);
-        }
-        
-        let item = null;
-        let children = Main.panel._leftBox.get_children();
-        let appMenu = Main.panel._applicationsmenu;
-        
-        item = new PopupMenu.PopupSeparatorMenuItem();
-        appMenu.menu.addMenuItem(item);
-        
-        item = new PopupMenu.PopupMenuItem(_(label));
-        item.connect('activate', callback);
-        appMenu.menu.addMenuItem(item);
-        
-    } catch (e) {
-        Logger.error(e);
-    }
-}
-
-function main(extensionMeta) {
-
-	/*
-    Logger.debug("extensionMeta: ");
-    for (let o in extensionMeta) {
-        Logger.debug(o + ": " + extensionMeta[o]);
-    }
-    */
+function main(meta) {
             
     try {
         
-        updatePanel();
+        updateLayout();
+        updateLookingGlass();
         updatePanelCorner();
         updateMenus();
         updateHotCorners();
         updateTrayIcons();
         updateMessageTray();
-        updateLookingGlass();
-        fixAltTab();
         
     } catch(e) {
         Logger.error(e);
     }
+}
+
+function init(meta) {
+    main(meta);
+}
+
+function enable() {
+}
+
+function disable() {
 }
