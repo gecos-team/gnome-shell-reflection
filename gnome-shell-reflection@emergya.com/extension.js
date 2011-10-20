@@ -79,14 +79,17 @@ let Logger = {
  */
 function updateLayout() {
 
-    Main.layoutManager._updateBoxes = function() {
+    Main.layoutManager._updateBoxes = Lang.bind(Main.layoutManager, function() {
+
+        Main.layoutManager.__proto__._updateBoxes.call(this);
+
         this.panelBox.set_position(this.primaryMonitor.x,
             this.primaryMonitor.y + this.primaryMonitor.height - this.panelBox.height);
         this.panelBox.set_size(this.primaryMonitor.width, -1);
 
         this.trayBox.set_position(this.bottomMonitor.x, this.bottomMonitor.y);
         this.trayBox.set_size(this.bottomMonitor.width, -1);
-    };
+    });
 
     global.screen.emit('monitors-changed');
 }
