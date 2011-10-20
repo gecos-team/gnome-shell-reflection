@@ -109,13 +109,55 @@ function updatePanelCorner() {
  */
 function updateLookingGlass() {
 
-    Main.createLookingGlass = function() {
-        if (Main.lookingGlass == null) {
-            Main.lookingGlass = new Main.LookingGlass.LookingGlass();
-            Main.layoutManager.panelBox.remove_actor(Main.lookingGlass.actor);
-            Main.layoutManager._chrome.addActor(Main.lookingGlass.actor);
+    LookingGlass.LookingGlass.prototype._resize = function() {
+        let primary = Main.layoutManager.primaryMonitor;
+        let myWidth = primary.width * 0.7;
+        let availableHeight = primary.height - Main.layoutManager.keyboardBox.height;
+        let myHeight = Math.min(primary.height * 0.7, availableHeight * 0.9);
+        this.actor.x = (primary.width - myWidth) / 2;
+        this._hiddenY = this.actor.get_parent().height - myHeight - 4; // -4 to hide the top corners
+        this._targetY = this._hiddenY + myHeight;
+        this.actor.y = -primary.height + 30; // +30 to show corners
+        this.actor.width = myWidth;
+        this.actor.height = myHeight;
+        this._objInspector.actor.set_size(Math.floor(myWidth * 0.8), Math.floor(myHeight * 0.8));
+        this._objInspector.actor.set_position(this.actor.x + Math.floor(myWidth * 0.1),
+                                              this._targetY + Math.floor(myHeight * 0.1));
+    };
+
+    LookingGlass.LookingGlass.prototype.open = function() {
+        if (this._open)
+            return;
+
+        if (!Main.pushModal(this._entry))
+            return;
+
+        this._notebook.selectIndex(0);
+        this.actor.show();
+        this._open = true;
+        this._history.lastItem();
+
+        LookingGlass.Tweener.removeTweens(this.actor);
+    };
+
+    LookingGlass.LookingGlass.prototype.close = function() {
+
+        if (!this._open)
+            return;
+
+        this._objInspector.actor.hide();
+
+        this._open = false;
+        LookingGlass.Tweener.removeTweens(this.actor);
+
+        if (this._borderPaintTarget != null) {
+            this._borderPaintTarget.disconnect(this._borderPaintId);
+            this._borderPaintTarget.disconnect(this._borderDestroyId);
+            this._borderPaintTarget = null;
         }
-        return Main.lookingGlass;
+
+        Main.popModal(this._entry);
+        this.actor.hide();
     };
 }
 
