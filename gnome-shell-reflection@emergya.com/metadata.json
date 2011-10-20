@@ -1,1 +1,7 @@
-{"shell-version": ["3.2.0"], "uuid": "gnome-shell-reflection@emergya.com", "name": "gnome-shell-reflection", "description": "Classic style desktop", "url": "http://www.emergya.es"}
+{
+    "shell-version": ["3.2.0"],
+    "uuid": "gnome-shell-reflection@emergya.com",
+    "name": "gnome-shell-reflection",
+    "description": "Classic style desktop",
+    "url": "http://www.guadalinex.org"
+}
