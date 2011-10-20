@@ -182,9 +182,13 @@ function updateTrayIcons() {
         if (INDICATORS[role] != Side.HIDDEN)
             continue;
         let indicator = Main.panel._statusArea[role];
-        Main.panel._statusBox.remove_actor(indicator.actor);
+        let children = Main.panel._rightBox.get_children();
+        for (let i = children.length - 1; i >= 0; i--) {
+            if (indicator.actor === children[i]) {
+                Main.panel._rightBox.remove_actor(indicator.actor);
+            }
+        }
     }
-
 }
 
 /**
