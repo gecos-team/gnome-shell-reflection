@@ -85,10 +85,15 @@ function updateLayout() {
 
         this.panelBox.set_position(this.primaryMonitor.x,
             this.primaryMonitor.y + this.primaryMonitor.height - this.panelBox.height);
-        this.panelBox.set_size(this.primaryMonitor.width, -1);
 
         this.trayBox.set_position(this.bottomMonitor.x, this.bottomMonitor.y);
-        this.trayBox.set_size(this.bottomMonitor.width, -1);
+
+        // Set trayBox's clip to show things above it, but not below
+        // it (so it's not visible behind the keyboard). The exact
+        // height of the clip doesn't matter, as long as it's taller
+        // than any Notification.actor.
+        this.trayBox.set_clip(0, 0,
+            this.bottomMonitor.width, this.bottomMonitor.height);
     });
 
     global.screen.emit('monitors-changed');
@@ -268,10 +273,10 @@ function updateMessageTray() {
 
         let State = MessageTray.State;
         let ANIMATION_TIME = MessageTray.ANIMATION_TIME;
-
         let primary = Main.layoutManager.primaryMonitor;
+
         this._tween(this.actor, '_trayState', State.SHOWN,
-                    { y: primary.y,
+                    { y: 0,
                       time: ANIMATION_TIME,
                       transition: 'easeOutQuad'
                     });
@@ -285,7 +290,7 @@ function updateMessageTray() {
 
         let primary = Main.layoutManager.primaryMonitor;
         this._tween(this.actor, '_trayState', State.HIDDEN,
-                    { y: primary.y - this.actor.height + 1,
+                    { y: -this.actor.height + 1,
                       time: ANIMATION_TIME,
                       transition: 'easeOutQuad'
                     });
