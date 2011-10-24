@@ -59,10 +59,18 @@ const INDICATORS = {
 
 let Logger = {
     error: function(msg) {
-        return Main._log('[gs-reflection error]:', msg);
+        if (global.logger) {
+            return global.logger.error(msg);
+        } else {
+            return Main._log('[gs-reflection error]:', msg);
+        }
     },
     debug: function(msg) {
-        return Main._log('[gs-reflection debug]:', msg);
+        if (global.logger) {
+            return global.logger.error(msg);
+        } else {
+            return Main._log('[gs-reflection debug]:', msg);
+        }
     },
     notify: function(msg, details, isTransient) {
         isTransient = typeof(isTransient) == 'boolean' ? isTransient : true;
@@ -319,8 +327,8 @@ function updateMessageTray() {
     });
 
     // Suppress the animation when the mouse is over the notification.
-    Main.messageTray.___onNotificationExpanded = Lang.bind(Main.messageTray, function() {
-    });
+    //Main.messageTray._onNotificationExpanded = Lang.bind(Main.messageTray, function() {
+    //});
 
     // Align summary items to the left
     Main.messageTray._summaryBin.x_align = St.Align.START;
@@ -338,7 +346,7 @@ function main(meta) {
         updatePanelCorner();
         updateMenus();
         updateHotCorners();
-        //updateTrayIcons();
+        updateTrayIcons();
         updateMessageTray();
 
     } catch(e) {
