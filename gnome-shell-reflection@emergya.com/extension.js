@@ -234,13 +234,14 @@ function updateTrayIcons() {
 
     // Remove indicators specified in INDICATORS array.
     for (let role in INDICATORS) {
-        if (INDICATORS[role] != Side.HIDDEN)
-            continue;
         let indicator = Main.panel._statusArea[role];
+        if (INDICATORS[role] != Side.HIDDEN || !indicator) {
+            continue;
+        }
         let children = Main.panel._rightBox.get_children();
         for (let i = children.length - 1; i >= 0; i--) {
             if (indicator.actor === children[i]) {
-                Main.panel._rightBox.remove_actor(indicator.actor);
+                indicator.actor.destroy();
             }
         }
     }
