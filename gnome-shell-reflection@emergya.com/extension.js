@@ -490,20 +490,14 @@ function updateNotifications() {
 
 function main(meta) {
 
-    try {
-
-        updateLayout();
-        updateLookingGlass();
-        updatePanelCorner();
-        updateMenus();
-        updateHotCorners();
-        updateTrayIcons();
-        updateMessageTray();
-        updateNotifications();
-
-    } catch(e) {
-        Logger.error(e);
-    }
+    updateLayout();
+    updateLookingGlass();
+    updatePanelCorner();
+    updateMenus();
+    updateHotCorners();
+    updateTrayIcons();
+    updateMessageTray();
+    updateNotifications();
 }
 
 function init(meta) {
