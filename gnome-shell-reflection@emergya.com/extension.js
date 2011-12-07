@@ -51,8 +51,6 @@ const Side = {
     RIGHT: 5
 };
 
-const UPDATE_HOT_CORNERS = Side.HIDDEN;
-
 const INDICATORS = {
     'a11y': Side.HIDDEN
 }
@@ -175,59 +173,6 @@ function updateLookingGlass() {
 }
 
 /**
- * Move the hot corners to the bottom of the screen
- * or hide them.
- *
- * See UPDATE_HOT_CORNERS constant, some people may want the
- * HotCorner feature back.
- */
-function updateHotCorners() {
-
-    Main.layoutManager._updateHotCorners = function() {
-
-        Main.layoutManager.__proto__._updateHotCorners.call(this);
-
-        let cornerX = null;
-        let cornerY = null;
-
-        if (UPDATE_HOT_CORNERS == Side.TOP) {
-
-            return;
-
-        } else if (UPDATE_HOT_CORNERS == Side.BOTTOM) {
-
-
-            // TODO: Currently the animated graphic is not shown.
-            // TODO: Currently only handles the primary monitor.
-            let primary = Main.layoutManager.primaryMonitor;
-            cornerX = 0;
-            cornerY = primary.height - 1;
-
-        } else if (UPDATE_HOT_CORNERS == Side.HIDDEN) {
-
-            for (let i = 0; i < this._hotCorners.length; i++) {
-                this._hotCorners[i].destroy();
-            }
-            this._hotCorners = [];
-
-            return;
-        }
-
-        try {
-            for (let i = 0; i < this._hotCorners.length; i++) {
-                let corner = this._hotCorners[i];
-                corner.actor.set_position(cornerX, cornerY);
-            }
-        } catch(e) {
-            Logger.error(e);
-        }
-
-    };
-
-    global.screen.emit('monitors-changed');
-}
-
-/**
  * Tray icons modifications.
  */
 function updateTrayIcons() {
@@ -302,6 +247,8 @@ function updateMessageTray() {
 
     // SummaryItems menus.
     Main.messageTray._summaryBoxPointer._arrowSide = St.Side.TOP;
+
+    Main.messageTray._hideTray();
 }
 
 function sortNotificationElements(tableContainer) {
@@ -494,7 +441,6 @@ function main(meta) {
     updateLookingGlass();
     updatePanelCorner();
     updateMenus();
-    updateHotCorners();
     updateTrayIcons();
     updateMessageTray();
     updateNotifications();
