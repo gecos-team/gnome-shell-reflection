@@ -302,6 +302,8 @@ function updateMessageTray() {
 
     // SummaryItems menus.
     Main.messageTray._summaryBoxPointer._arrowSide = St.Side.TOP;
+
+    Main.messageTray._hideTray();
 }
 
 function sortNotificationElements(tableContainer) {
