@@ -20,12 +20,8 @@ attributes, the message tray gradient and the rounded borders of the notificatio
 If you want this changes copy gnome-shell.css to /usr/share/gnome-shell/theme
 folder.
 
-The HotCorners feature is disabled by default. If you want this feature to come
-back, change the value of the UPDATE_HOT_CORNERS constant in extension.js
-
 License
 -------
 
 This project is licensed under the terms of the GPL v2.0,
 see http://www.gnu.org/licenses/gpl-2.0.html
-
